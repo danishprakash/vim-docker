@@ -1,3 +1,5 @@
+let g:docker_hub_base_url = 'https://hub.docker.com/_/'
+
 " return image name by parsing `FROM` command
 function! s:get_base_image_name()
     " save cursor position to restore later on
@@ -19,9 +21,29 @@ function! s:get_base_image_name()
     return l:base_image_name
 endfunction
 
-function! s:open_base_image()
-    let l:base_image_name = s:get_base_image_name()
-    echo l:base_image_name
+
+" browse base image on docker hub
+function! s:browse_base_image_docker_hub()
+    let l:base_image = split(s:get_base_image_name(), ':')
+    let l:base_image_name = l:base_image[0]
+    let l:base_image_variant = l:base_image[1]
+
+    let l:final_url = g:docker_hub_base_url.l:base_image_name
+    call s:open_external_link(l:final_url)
 endfunction
 
-command! Docker call s:open_base_image()
+
+" open final_url using `open` utility
+function! s:open_external_link(final_url)
+    if executable('xdg-open')
+        let l:open_executable = 'xdg-open'
+    elseif executable('open')
+        let l:open_executable = 'open'
+    else
+        echoerr 'vim-docker: no `open` or equivalent command found.'
+    endif
+
+    call system(l:open_executable . " " . a:final_url)
+endfunction
+
+command! DockerHubOpen call s:browse_base_image_docker_hub()
