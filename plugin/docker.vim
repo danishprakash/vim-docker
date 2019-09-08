@@ -1,6 +1,29 @@
 let g:docker_hub_base_url = 'https://hub.docker.com/_/'
+let g:docker_reference_url = 'https://docs.docker.com/engine/reference/builder/#'
 
-" TODO: make base_image url a buffer scoped variable
+let g:supported_keyword = [
+    \ 'FROM',
+    \ 'RUN',
+    \ 'CMD',
+    \ 'LABEL',
+    \ 'MAINTAINER',
+    \ 'EXPOSE',
+    \ 'ENV',
+    \ 'ADD',
+    \ 'COPY',
+    \ 'ENTRYPOINT',
+    \ 'VOLUME',
+    \ 'USER',
+    \ 'WORKDIR',
+    \ 'ARG',
+    \ 'ONBUILD',
+    \ 'STOPSIGNAL',
+    \ 'HEALTHCHECK',
+    \ 'SHELL'
+    \ ]
+
+" TODO: create method to define all commands at once
+
 
 function! s:check_filetype()
     if &ft == 'Dockerfile'
@@ -54,8 +77,8 @@ function! s:browse_base_image_docker_hub()
     let l:base_image_name = l:base_image[0]
     " let l:base_image_variant = len(l:base_image) > 1 ? l:base_image[1] : ''
 
-    let l:final_url = g:docker_hub_base_url.l:base_image_name
-    call s:open_external_link(l:final_url)
+    let l:base_image_url = g:docker_hub_base_url.l:base_image_name
+    call s:open_external_link(l:base_image_url)
 endfunction
 
 
@@ -69,7 +92,56 @@ function! s:open_external_link(final_url)
         echoerr 'vim-docker: no `open` or equivalent command found.'
     endif
 
-    call system(l:open_executable . " " . a:final_url)
+    call jobstart(l:open_executable . " " . a:final_url)
 endfunction
 
 command! DockerHubOpen call s:browse_base_image_docker_hub()
+
+" browse reference documentation on docker
+function! s:browse_reference()
+    let l:keyword = expand('<cword>')
+    if index(g:supported_keyword, l:keyword) < 0
+        echo 'vim-docker: keyword not supported'
+        return
+    endif
+
+    let l:reference_url = g:docker_reference_url . tolower(l:keyword)
+    call s:open_external_link(l:reference_url)
+endfunction
+
+command! DockerDocOpen call s:browse_reference()
+
+
+" TODO: use conditional logic here to check
+" whether the build command succeeded successfully
+" or not, figure out how to poll the same cmd again
+" probably using job_id?
+function! s:job_handler(job_id, data, event) dict
+    if a:event == 'stdout' && a:data[0] != ''
+        echo a:data[0]
+    endif
+endfunction
+
+
+" build current docker image asynchronously
+function! s:docker_build(image_name)
+    let l:docker_file = ''
+    if a:image_name == ''
+        let l:docker_file = split(expand('%:t'), '\.')[0]
+    else
+        let l:docker_file = a:image_name
+    endif
+    
+    " TODO: check whether you are in the correct dir or not
+    " or use -f flag to point to the abs path for the
+    " Dockerfile open in the current buffer
+    let l:command_string = printf("docker build -t %s .", l:docker_file)
+    echo l:command_string
+
+    let l:job_args = {
+        \ 'on_stdout': function('s:job_handler'),
+    \ }
+    call jobstart(l:command_string, l:job_args)
+endfunction
+
+command! -nargs=? DockerBuild call s:docker_build(<q-args>)
