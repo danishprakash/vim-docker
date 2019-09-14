@@ -1,3 +1,4 @@
+let g:vim_docker_echo_prefix = 'vim-docker'
 let g:docker_hub_base_url = 'https://hub.docker.com/_/'
 let g:docker_reference_url = 'https://docs.docker.com/engine/reference/builder/#'
 
@@ -112,36 +113,78 @@ endfunction
 command! DockerDocOpen call s:browse_reference()
 
 
-" TODO: use conditional logic here to check
-" whether the build command succeeded successfully
-" or not, figure out how to poll the same cmd again
-" probably using job_id?
-function! s:job_handler(job_id, data, event) dict
-    if a:event == 'stdout' && a:data[0] != ''
-        echo a:data[0]
+" echo build status after job completion
+" TODO: return the suffix from here and 
+" create a method which does the echoing
+function! s:on_exit_callback(job_id, data, event) dict
+    let l:build_status = ''
+    let l:build_echo_prefix = '[build]'
+
+    if a:event == 'exit' && a:data[0] != ''
+        if a:data == 0
+            let l:build_status = 'SUCESS'
+        else
+            let l:build_status = 'FAILED'
+        endif
+        echo printf('%s: %s %s', g:vim_docker_echo_prefix, l:build_echo_prefix, l:build_status)
     endif
+endfunction
+
+
+" return complete command string
+function! s:get_cmd_string(cmd) dict
+    let l:cmd_string = ['docker']
+    return add(l:cmd_string, a:cmd)
+endfunction
+
+
+" return options for jobstart()
+function! s:get_options() dict
+    let l:file_dir = expand('%:h')
+    let l:file_name = expand('%:p')
+
+    " TODO: do proper error handling here
+    " when the dir is not correct or for
+    " cases where there is premature return
+    " make sure file dir is valid
+    if !isdirectory(l:file_dir)
+        return
+    endif
+
+    let l:job_args = {
+                \ 'on_exit': function('s:on_exit_callback'),
+                \ 'cwd': l:file_dir
+                \ }
+
+    return l:job_args
+endfunction
+
+
+function! s:start_job()
+    let l:job_id = jobstart(l:command_string, l:job_args)
+endfunction
+
+
+function! s:docker_push(image_name)
+    return
 endfunction
 
 
 " build current docker image asynchronously
 function! s:docker_build(image_name)
-    let l:docker_file = ''
-    if a:image_name == ''
-        let l:docker_file = split(expand('%:t'), '\.')[0]
-    else
-        let l:docker_file = a:image_name
-    endif
+    let l:command_string = s:get_cmd_string('build')
     
-    " TODO: check whether you are in the correct dir or not
-    " or use -f flag to point to the abs path for the
-    " Dockerfile open in the current buffer
-    let l:command_string = printf("docker build -t %s .", l:docker_file)
-    echo l:command_string
+    " use label (-t) if specified by user
+    if a:image_name != ''
+        let l:command_string = add(l:command_string, '-t')
+        let l:command_string = add(l:command_string, a:image_name)
+    endif
 
-    let l:job_args = {
-        \ 'on_stdout': function('s:job_handler'),
-    \ }
-    call jobstart(l:command_string, l:job_args)
+    " add context to build command
+    let l:command_string = add(l:command_string, '.')
+    let l:job_options = s:get_options()
+
+    call s:start_job(l:command_string, l:job_options)
 endfunction
 
 command! -nargs=? DockerBuild call s:docker_build(<q-args>)
