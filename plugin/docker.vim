@@ -23,6 +23,8 @@ let g:supported_keyword = [
     \ 'SHELL'
     \ ]
 
+let s:status_prefix = ''
+
 " TODO: create method to define all commands at once
 
 
@@ -116,32 +118,37 @@ command! DockerDocOpen call s:browse_reference()
 " echo build status after job completion
 " TODO: return the suffix from here and 
 " create a method which does the echoing
-function! s:on_exit_callback(job_id, data, event) dict
+function! s:on_exit_callback(job_id, data, event)
     let l:build_status = ''
     let l:build_echo_prefix = '[build]'
+    let l:build_echo_prefix = '[' . s:status_prefix . ']'
 
     if a:event == 'exit' && a:data[0] != ''
         if a:data == 0
-            let l:build_status = 'SUCESS'
+            let l:build_status = 'SUCCESS'
         else
             let l:build_status = 'FAILED'
         endif
         echo printf('%s: %s %s', g:vim_docker_echo_prefix, l:build_echo_prefix, l:build_status)
     endif
+
+    " if a:event == 'stdout'
+    "     echo a:data
+    " endif
+
 endfunction
 
 
 " return complete command string
-function! s:get_cmd_string(cmd) dict
+function! s:get_cmd_string(cmd)
     let l:cmd_string = ['docker']
     return add(l:cmd_string, a:cmd)
 endfunction
 
 
 " return options for jobstart()
-function! s:get_options() dict
+function! s:get_options()
     let l:file_dir = expand('%:h')
-    let l:file_name = expand('%:p')
 
     " TODO: do proper error handling here
     " when the dir is not correct or for
@@ -151,22 +158,18 @@ function! s:get_options() dict
         return
     endif
 
-    let l:job_args = {
+    let l:job_options = {
                 \ 'on_exit': function('s:on_exit_callback'),
+                \ 'on_stdout': function('s:on_exit_callback'),
                 \ 'cwd': l:file_dir
                 \ }
 
-    return l:job_args
+    return l:job_options
 endfunction
 
 
-function! s:start_job()
-    let l:job_id = jobstart(l:command_string, l:job_args)
-endfunction
-
-
-function! s:docker_push(image_name)
-    return
+function! s:start_job(command_string, job_options)
+    let l:job_id = jobstart(a:command_string, a:job_options)
 endfunction
 
 
@@ -180,11 +183,50 @@ function! s:docker_build(image_name)
         let l:command_string = add(l:command_string, a:image_name)
     endif
 
+    let s:status_prefix = 'build'
+
+    let l:file_name = expand('%:p')
+    let l:command_string = add(l:command_string, '-f')
+    let l:command_string = add(l:command_string, l:file_name)
+
     " add context to build command
     let l:command_string = add(l:command_string, '.')
     let l:job_options = s:get_options()
 
+    echo l:command_string
     call s:start_job(l:command_string, l:job_options)
 endfunction
 
 command! -nargs=? DockerBuild call s:docker_build(<q-args>)
+
+
+" push docker image
+function! s:docker_push(image_name)
+    " check whether one arg is supplied
+    if len(split(a:image_name, ' ')) > 1
+        echo 'vim-docker: Exactly 1 argument is required'
+        return
+    endif
+
+    let l:command_string = s:get_cmd_string('push')
+    let l:command_string = add(l:command_string, a:image_name)
+    let l:job_options = s:get_options()
+
+    let s:status_prefix = 'push'
+    call s:start_job(l:command_string, l:job_options)
+endfunction
+
+command! -nargs=1 DockerPush call s:docker_push(<f-args>)
+
+
+" tag docker image
+function! s:docker_tag(image_name, tag_name)
+    let l:command_string = s:get_cmd_string('tag')
+    let l:command_string = extend(l:command_string, [a:image_name, a:tag_name])
+    let l:job_options = s:get_options()
+
+    let s:status_prefix = 'tag'
+    call s:start_job(l:command_string, l:job_options)
+endfunction
+
+command! -nargs=+ DockerTag call s:docker_tag(<f-args>)
