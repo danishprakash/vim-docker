@@ -11,6 +11,14 @@ function! docker#util#open_external_link(final_url)
     call jobstart(l:open_executable . " " . a:final_url, {})
 endfunction
 
+function! docker#util#check_filetype()
+    if &ft == 'Dockerfile'
+        return 1
+    else
+        return 0
+    endif
+endfunction
+
 " return complete command string
 function! docker#util#get_cmd_string(cmd)
     let l:cmd_string = ['docker']

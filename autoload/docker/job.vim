@@ -40,12 +40,3 @@ endfunction
 function! docker#job#start_job(command_string, job_options)
     let l:job_id = jobstart(a:command_string, a:job_options)
 endfunction
-
-function! s:check_filetype()
-    if &ft == 'Dockerfile'
-        return 1
-    else
-        return 0
-    endif
-endfunction
-

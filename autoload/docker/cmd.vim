@@ -24,7 +24,7 @@ let s:supported_keyword = [
 
 " browse base image on docker hub
 function! docker#cmd#browse_base_image_docker_hub()
-    if !s:check_filetype()
+    if !docker#util#check_filetype()
         echo 'vim-docker: filetype not Dockerfile'
         return
     endif
