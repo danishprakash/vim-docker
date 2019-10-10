@@ -1,3 +1,8 @@
+" Vim filetype plugin file
+" Language:	    Dockerfile
+" Maintainer:	Danish Prakash <https://danishprakash.github.io>
+" Last Change:	2019 Oct 9
+
 " define commands
 command! -nargs=+ DockerTag     call docker#cmd#docker_tag(<f-args>)
 command! -nargs=0 DockerDocOpen call docker#cmd#browse_reference()
