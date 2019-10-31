@@ -1,0 +1,87 @@
+# FROM
+snippet f
+	FROM ${1:debian}
+snippet from
+	FROM ${1:debian}
+snippet fas
+	FROM ${1:debian} as ${2}
+
+# maintainer label
+snippet m
+	LABEL maintainer=${1:name}
+snippet maintainer
+	LABEL maintainer=${1:name}
+
+# RUN
+snippet r
+	RUN ${1:command}
+snippet run
+	RUN ${1:command}
+
+# CMD
+snippet c
+	CMD ${1:command}
+snippet cmd
+	CMD ${1:command}
+
+# COPY
+snippet cp
+	COPY ${1:src} ${2:dest}
+snippet copy
+	COPY ${1:src} ${2:dest}
+snippet cpf
+	COPY --from=${1:0} ${2:src} ${3:dest}
+
+# EXPOSE
+snippet exp
+	EXPOSE ${1:port}
+snippet expose
+	EXPOSE ${1:port}
+
+# ENV
+snippet e
+	ENV ${1:key} ${2:value}
+snippet env
+	ENV ${1:key} ${2:value}
+
+# ADD
+snippet a
+	ADD ${1:src} ${2:dst}
+snippet add
+	ADD ${1:src} ${2:dst}
+
+# ENTRYPOINT
+snippet ent
+	ENTRYPOINT ${1:command}
+snippet entrypoint
+	ENTRYPOINT ${1:command}
+
+# VOLUME
+snippet v
+	VOLUME [${1:path}]
+snippet volume
+	VOLUME [${1:path}]
+
+# USER
+snippet u
+	USER ${1:name}
+snippet user
+	USER ${1:name}
+
+# WORKDIR
+snippet w
+	WORKDIR ${1}
+snippet workdir
+	WORKDIR ${1}
+
+# ONBUILD
+snippet o
+	ONBUILD ${1}
+snippet onbuild
+	ONBUILD ${1}
+
+# LABEL
+snippet l
+	LABEL ${1:label}=${2:value}
+snippet label
+	LABEL ${1:label}=${2:value}
