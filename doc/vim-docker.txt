@@ -1,0 +1,109 @@
+*vim-docker.txt* Docker development plugin for Vim
+*vim-docker*
+
+Author:  Danish Prakash <https://danishprakash.github.io>
+Repo:    https://github.com/danishprakash/vim-docker
+License: GPL-3.0
+
+==============================================================================
+CONTENTS                                                     *docker-contents*
+
+  1. Intro........................................|docker-intro|
+  2. Commands.....................................|docker-commands|
+  3. Mappings.....................................|docker-mappings|
+  4. Syntax highlighting..........................|docker-syntax|
+
+==============================================================================
+INTRO                                                           *docker-intro*
+
+vim-docker adds Docker development support for Vim with support for the 
+following features:
+
+  * Look up Dockerfile instructions with `:DockerDocBrowse`.
+  * Quickly open base Docker image with `:DockerHubBrowse`.
+  * Use `:DockerPush` to push Docker images asynchronously to specified 
+    registry.
+  * Easily build Docker images asynchronously with `:DockerBuild`.
+  * Tag Docker images with `:DockerTag`.
+  * Syntax highlighting for Dockerfile.
+  * Write Dockerfiles faster using snippets for commonly used instructions.
+
+
+
+==============================================================================
+COMMANDS                                                     *docker-commands*
+
+                                                            *:DockerImagePush*
+:DockerHubBrowse
+
+    DockerHubBrowse opens the default browser with Docker hub page for the base
+    image for the Dockerfile loaded inside the current buffer.
+
+                                                            *:DockerDocBrowse*
+:DockerDocBrowse [path]
+
+    DockerDocBrowse opens Docker reference for the instruction under the cursor.
+
+                                                                *:DockerBuild*
+:DockerBuild -t [label]
+
+    DockerBuild builds the docker image using the Dockerfile loaded inside the
+    current buffer. It also accepts an optional label specified by `-t`.
+
+                                                                 *:DockerPush*
+:DockerPush [image]
+
+    Same as Build, but pushes the docker image to specified registry.
+
+                                                                  *:DockerTag*
+:DockerTag [image] [tag]
+
+    Tags the Docker image.
+
+
+==============================================================================
+MAPPINGS                                                     *docker-mappings*
+
+vim-docker has a few <Plug> internal mappings which can be used to create
+custom mappings.
+For example, to create a mapping that opens the base Docker image for the
+Dockerfile open in the current buffer, create such a mapping : >
+
+  au FileType Dockerfile nmap <leader>b <Plug>(docker-base-image)
+
+There are two <Plug> mappings available:
+
+                                                          *(docker-reference)*
+
+Opens Docker reference for instruction under the cursor 
+in the default browser.
+
+                                                          *(docker-base-image)*
+
+Opens Docker hub page for base image for Dockerfile
+loaded inside the current buffer.
+
+
+==============================================================================
+SYNTAX HIGHLIGHTING                                            *docker-syntax*
+
+vim-docker comes with syntax highlighting for Dockerfiles. Although, it is
+included, it is disabled if syntax highlighting is already loaded.
+
+
+==============================================================================
+LICENSE
+
+MIT
+
+==============================================================================
+CONTRIBUTING
+
+Do you want to make this better? Open an issue and/or a PR on Github.
+Thanks!
+
+Github:    https://github.com/danishprakash/vim-githubinator
+
+==============================================================================
+
+vim:tw=78:ts=8:ft=help:norl:noet:fen:
